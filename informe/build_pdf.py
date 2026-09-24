@@ -1,10 +1,14 @@
-"""SPEC 008 F3 — Convierte informe/TA_U2_GRUPO_X.md a informe/TA_U2_GRUPO_X.pdf.
+"""SPEC 008 F3 — Convierte los informes .md a PDF (cierre SPEC 008).
 
 Uso:
     python informe/build_pdf.py
 
-Lee el .md, genera caratula + indice textual + secciones 1-5 + anexos
-usando reportlab (Platypus). No depende de F1/F2/F4.
+Genera AMBOS:
+    informe/TA_U2_SECCION_44888.md -> informe/TA_U2_SECCION_44888.pdf
+    informe/TA_U2_GRUPO_X.md        -> informe/TA_U2_GRUPO_X.pdf
+
+Incrusta las 4 capturas de informe/capturas/ (reportlab Image,
+max ancho 450px) + link repo clicable. No depende de F1/F2/F4.
 """
 from __future__ import annotations
 
@@ -15,9 +19,10 @@ from xml.sax.saxutils import escape
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.units import cm, mm
+from reportlab.lib.units import cm
 from reportlab.platypus import (
     HRFlowable,
+    Image as RLImage,
     PageBreak,
     Paragraph,
     Preformatted,
@@ -28,8 +33,47 @@ from reportlab.platypus import (
 )
 
 BASE = Path(__file__).resolve().parent
-MD_PATH = BASE / "TA_U2_GRUPO_X.md"
-PDF_PATH = BASE / "TA_U2_GRUPO_X.pdf"
+REPO_URL = "https://github.com/devmirai/TA2-UTP-Assistant-44888"
+
+PAIRS: list[tuple[Path, Path]] = [
+    (BASE / "TA_U2_SECCION_44888.md", BASE / "TA_U2_SECCION_44888.pdf"),
+    (BASE / "TA_U2_GRUPO_X.md", BASE / "TA_U2_GRUPO_X.pdf"),
+]
+# Compatibilidad: valores por defecto del par principal
+MD_PATH = PAIRS[0][0]
+PDF_PATH = PAIRS[0][1]
+
+# (archivo, titulo, pie)
+CAPTURES: list[tuple[str, str, str]] = [
+    (
+        "01-inbox-chat.png",
+        "A1 — Inbox + chat (informe/capturas/01-inbox-chat.png)",
+        "Bandeja con 2 hilos de Ana Torres (TechCorp, módulo pagos): "
+        "Seguimiento factura (2026-09-21) y Revisión contrato (2026-09-20), ambos en estado open.",
+    ),
+    (
+        "02-thread-requires_action.png",
+        "A2 — Thread + requires_action (informe/capturas/02-thread-requires_action.png)",
+        "Hilo Revisión contrato con Run run_ana_001 en requires_action: "
+        "Ronda 1 (extract_entities + parse_adjunto de req_inicial.pdf) y "
+        "Ronda 2 (slots + ticket UTPC-142) con botones Aprobar/Rechazar.",
+    ),
+    (
+        "03-approvals.png",
+        "A3 — Aprobaciones HITL (informe/capturas/03-approvals.png)",
+        "Cola de aprobaciones con 1 run en requires_action (th_ana_001 / run_ana_001): "
+        "borrador de respuesta con descuento 10%; al aprobar se llama a "
+        "submit_tool_outputs y el run avanza a completed.",
+    ),
+    (
+        "04-board.png",
+        "A4 — Tablero Kanban (informe/capturas/04-board.png)",
+        "Tablero con UTPC-142 ([TechCorp] Revisar requisitos módulo pagos) en To Do, "
+        "TC-102 en Doing y TC-101 en To Do; evidencia de trazabilidad correo → ticket.",
+    ),
+]
+
+MAX_IMG_W = 450  # px -> puntos reportlab (max ancho 450px según SPEC 008 cierre)
 
 W, H = A4
 
@@ -139,21 +183,75 @@ def cover_header_footer(canvas, doc):
     canvas.restoreState()
 
 
-def build():
-    if not MD_PATH.exists():
-        raise FileNotFoundError(f"No existe {MD_PATH}")
-    md = MD_PATH.read_text(encoding="utf-8")
+def scaled_image(path: Path) -> RLImage:
+    """Imagen reportlab con max ancho MAX_IMG_W px, aspecto preservado."""
+    img = RLImage(str(path))
+    iw, ih = img.imageWidth, img.imageHeight
+    scale = min(1.0, MAX_IMG_W / float(iw)) if iw else 1.0
+    img.drawWidth = iw * scale
+    img.drawHeight = ih * scale
+    img.hAlign = "CENTER"
+    return img
+
+
+def append_capture_annex(story: list) -> int:
+    """Incrusta las 4 capturas + link repo clicable. Retorna nro. de imágenes agregadas."""
+    story.append(Paragraph("Anexo — Capturas demo (evidencia visual)", sH1))
+    story.append(
+        Paragraph(
+            "Evidencia visual del flujo demo (SPEC 008): inbox, thread en "
+            "<font face=\"Courier\">requires_action</font>, aprobaciones HITL y tablero. "
+            "Imágenes a max ancho 450px.",
+            sCaption,
+        )
+    )
+    n = 0
+    for fname, title, pie in CAPTURES:
+        p = BASE / "capturas" / fname
+        story.append(Paragraph(escape(title), sH2))
+        if p.exists():
+            story.append(scaled_image(p))
+            story.append(Spacer(1, 0.15 * cm))
+            story.append(Paragraph(escape(f"Pie: {pie}"), sCaption))
+            n += 1
+        else:
+            story.append(Paragraph(f"[Falta imagen: {escape(fname)}]", sCaption))
+        story.append(Spacer(1, 0.25 * cm))
+    story.append(HRFlowable(width="100%", thickness=0.4, color=colors.HexColor("#d1d5db")))
+    story.append(Spacer(1, 0.15 * cm))
+    story.append(Paragraph("Repositorio (privado, link clicable):", sH2))
+    story.append(
+        Paragraph(
+            f'<a href="{REPO_URL}" color="#1d4ed8">{REPO_URL}</a> (privado)',
+            sBody,
+        )
+    )
+    story.append(
+        Paragraph(
+            "Runtime Production: Groq <font face=\"Courier\">openai/gpt-oss-120b</font> "
+            "(principal) + fallback <font face=\"Courier\">qwen</font>.",
+            sCaption,
+        )
+    )
+    return n
+
+
+def build_one(md_path: Path, pdf_path: Path):
+    if not md_path.exists():
+        raise FileNotFoundError(f"No existe {md_path}")
+    md = md_path.read_text(encoding="utf-8")
     cover_rows = parse_cover(md)
+    short = md_path.stem  # TA_U2_SECCION_44888 | TA_U2_GRUPO_X
 
     doc = SimpleDocTemplate(
-        str(PDF_PATH),
+        str(pdf_path),
         pagesize=A4,
         leftMargin=2 * cm,
         rightMargin=2 * cm,
         topMargin=1.8 * cm,
         bottomMargin=2 * cm,
-        title="TA U2 GRUPO X — Asistente UTPConsult",
-        author="Grupo X",
+        title=f"{short} — Asistente UTPConsult",
+        author="Sección 44888",
     )
     story = []
 
@@ -162,7 +260,7 @@ def build():
     story.append(Paragraph("TA U2 — Asistente UTPConsult", sSubtitle))
     story.append(Paragraph("Correos &#8594; Jira / GCal / CRM", sSubtitle))
     story.append(Spacer(1, 0.3 * cm))
-    story.append(Paragraph("Informe del Trabajo Academico<br/>Unidad 2 — GRUPO X", sTitle))
+    story.append(Paragraph("Informe del Trabajo Academico<br/>Unidad 2 — SECCIÓN 44888", sTitle))
     story.append(Spacer(1, 0.2 * cm))
     story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor("#111827")))
     story.append(Spacer(1, 0.5 * cm))
@@ -175,16 +273,21 @@ def build():
         story.append(Spacer(1, 0.3 * cm))
         story.append(
             Paragraph(
-                "Nota: los campos marcados [PENDIENTE] deben completarse antes de la entrega final (SPEC 008 F3). "
                 "Runtime Production: Groq <font face=\"Courier\">openai/gpt-oss-120b</font> (principal), "
-                "fallback <font face=\"Courier\">qwen/qwen3.8-27b</font>.",
+                "fallback <font face=\"Courier\">qwen</font>.",
+                sCaption,
+            )
+        )
+        story.append(
+            Paragraph(
+                f'Repositorio (privado, clicable): <a href="{REPO_URL}" color="#1d4ed8">{REPO_URL}</a>',
                 sCaption,
             )
         )
     story.append(Spacer(1, 0.4 * cm))
     story.append(
         Paragraph(
-            "Fuente: <font face=\"Courier\">informe/TA_U2_GRUPO_X.md</font> — generado con reportlab (SPEC 008, solo F3).",
+            f"Fuente: <font face=\"Courier\">informe/{md_path.name}</font> — generado con reportlab (SPEC 008, solo F3).",
             sCaption,
         )
     )
@@ -199,7 +302,8 @@ def build():
         "3. Function Calling Tools (3 JSON de tools/*.json)",
         "4. Flujo Run — Caso Ana Torres / TechCorp (8 pasos)",
         "5. Riesgos y Etica (R1, R2 + matriz)",
-        "Anexos y evidencias (F2 / F3 / F4 + link repo)",
+        "Anexos y evidencias (capturas + link repo)",
+        "Anexo visual — Capturas demo incrustadas (A1-A4)",
     ]
     for i, item in enumerate(indice, start=1):
         story.append(Paragraph(f"{i}. {escape(item)}", sIndex))
@@ -207,7 +311,7 @@ def build():
     story.append(
         Paragraph(
             "El contenido de las secciones 1 a 5 y anexos replica integro el archivo "
-            "<font face=\"Courier\">informe/TA_U2_GRUPO_X.md</font> (tablas, prompt plano, JSON, flujo y matriz).",
+            f"<font face=\"Courier\">informe/{md_path.name}</font> (tablas, prompt plano, JSON, flujo y matriz).",
             sCaption,
         )
     )
@@ -310,10 +414,23 @@ def build():
         story.append(Paragraph(inline_md(s), sBody))
         i += 1
 
+    # ---------- ANEXO VISUAL: 4 capturas incrustadas + repo clicable ----------
+    n_img = append_capture_annex(story)
+
     doc.build(story, onFirstPage=cover_header_footer, onLaterPages=header_footer)
-    size = PDF_PATH.stat().st_size
-    print(f"PDF OK: {PDF_PATH} ({size} bytes, {size/1024/1024:.2f} MB)")
-    return PDF_PATH
+    size = pdf_path.stat().st_size
+    print(f"PDF OK: {pdf_path} ({size} bytes, {size/1024/1024:.2f} MB, imgs={n_img})")
+    return pdf_path
+
+
+def build():
+    out: list[Path] = []
+    for md_path, pdf_path in PAIRS:
+        if md_path.exists():
+            out.append(build_one(md_path, pdf_path))
+        else:
+            print(f"AVISO: no existe {md_path}, se omite")
+    return out
 
 
 if __name__ == "__main__":

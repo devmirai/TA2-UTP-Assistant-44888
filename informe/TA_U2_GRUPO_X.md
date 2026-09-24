@@ -1,19 +1,17 @@
-# TA U2 GRUPO #X
+# TA U2 SECCIÓN 44888
 
 ## Carátula
 
 | Campo | Valor |
 |---|---|
 | Trabajo | TA U2 — Asistente UTPConsult (correos → Jira / GCal / CRM) |
-| Grupo | Sin número asignado — Sección 44888 (2 integrantes) |
+| Grupo | Sección 44888 (2 integrantes) |
 | Integrantes | Matias Alejandro Mendez Cabrejos, Jhan Alexis Julca Huaman |
 | Curso | Herramientas de Desarrollo Profesional TIC — Sección 44888 |
 | Docente | Carlos Alberto Castillo Catturini |
 | Fecha | 24/09/2026 |
-| Repositorio | [PENDIENTE link — se agregará tras crear repo privado] |
-| Runtime Production | Groq `openai/gpt-oss-120b` (principal), fallback `qwen/qwen3.8-27b` |
-
-> Nota: los campos marcados [PENDIENTE] deben completarse antes de generar el PDF final.
+| Repositorio | [https://github.com/devmirai/TA2-UTP-Assistant-44888](https://github.com/devmirai/TA2-UTP-Assistant-44888) (privado) |
+| Runtime Production | Groq `openai/gpt-oss-120b` (principal) + fallback `qwen` |
 
 ## Índice
 
@@ -269,13 +267,19 @@ Schemas Groq function-calling OpenAI-compatibles, pegables en `tools[]`. 3 JSON 
 
 # Anexos y evidencias
 
+| # | Captura | Ruta | Pie — qué muestra |
+|---|---|---|---|
+| A1 | Inbox + chat | `informe/capturas/01-inbox-chat.png` | Bandeja con 2 hilos de Ana Torres (TechCorp, módulo pagos): Seguimiento factura (2026-09-21) y Revisión contrato (2026-09-20), ambos en estado open. |
+| A2 | Thread + requires_action | `informe/capturas/02-thread-requires_action.png` | Hilo Revisión contrato con Run `run_ana_001` en `requires_action`: Ronda 1 (extract_entities + parse_adjunto de req_inicial.pdf) y Ronda 2 (slots + ticket UTPC-142) con botones Aprobar/Rechazar. |
+| A3 | Aprobaciones HITL | `informe/capturas/03-approvals.png` | Cola de aprobaciones con 1 run en `requires_action` (th_ana_001 / run_ana_001): borrador de respuesta con descuento 10%; al aprobar se llama a submit_tool_outputs y el run avanza a completed. |
+| A4 | Tablero Kanban | `informe/capturas/04-board.png` | Tablero con UTPC-142 ([TechCorp] Revisar requisitos módulo pagos) en To Do, TC-102 en Doing y TC-101 en To Do; evidencia de trazabilidad correo → ticket. |
+
 | Anexo | Estado |
 |---|---|
-| Capturas demo (chat, upload, requires_action, approvals) | [PENDIENTE: agregar 4 capturas] |
-| PDF final `TA_U2_GRUPO_#X.pdf` | informe/TA_U2_GRUPO_X.pdf generado |
-| Checklist rúbrica 5x4pts | informe/CHECKLIST.md |
-| Link repo | [PENDIENTE] |
+| PDF final | `informe/TA_U2_SECCION_44888.pdf` y réplica `informe/TA_U2_GRUPO_X.pdf` generados (SPEC 008 cierre) |
+| Checklist rúbrica 5x4pts | `informe/CHECKLIST.md` (capturas OK, repo OK) |
+| Link repo (privado) | https://github.com/devmirai/TA2-UTP-Assistant-44888 |
 
 <!-- F2-STREAMLIT -->
-PDF generado: informe/TA_U2_GRUPO_X.pdf
+PDF generado: informe/TA_U2_SECCION_44888.pdf y réplica informe/TA_U2_GRUPO_X.pdf
 Ver CHECKLIST.md
