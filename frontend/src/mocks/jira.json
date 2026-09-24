@@ -1,0 +1,24 @@
+[
+  {
+    "key": "UTPC-142",
+    "summary": "[TechCorp] Revisar requisitos módulo pagos",
+    "status": "To Do",
+    "assignee": "Ana",
+    "company": "TechCorp",
+    "module": "pagos"
+  },
+  {
+    "key": "TC-101",
+    "summary": "Renovación contrato TechCorp — titular Ana",
+    "status": "To Do",
+    "assignee": "Ana",
+    "company": "TechCorp"
+  },
+  {
+    "key": "TC-102",
+    "summary": "Aprobar descuento 10% TechCorp",
+    "status": "In Progress",
+    "assignee": "Ana",
+    "company": "TechCorp"
+  }
+]

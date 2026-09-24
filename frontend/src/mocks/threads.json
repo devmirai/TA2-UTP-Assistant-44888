@@ -1,0 +1,22 @@
+[
+  {
+    "id": "th_ana_001",
+    "subject": "Revisión contrato TechCorp — Ana",
+    "from": "ana@techcorp.example",
+    "company": "TechCorp",
+    "contact": "Ana",
+    "snippet": "Hola, adjunto la propuesta con el descuento del 10% para revisión.",
+    "date": "2026-09-20T10:00:00Z",
+    "status": "open"
+  },
+  {
+    "id": "th_ana_002",
+    "subject": "Seguimiento factura TechCorp",
+    "from": "ana@techcorp.example",
+    "company": "TechCorp",
+    "contact": "Ana",
+    "snippet": "¿Pudieron revisar los términos de pago a 30 días?",
+    "date": "2026-09-21T15:30:00Z",
+    "status": "open"
+  }
+]
