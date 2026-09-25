@@ -35,7 +35,7 @@ export function ApprovalsPage(): JSX.Element {
     setSubmittingId(run.id);
     setStatuses((prev) => ({ ...prev, [run.id]: 'in_progress' }));
     try {
-      await api.post(`/api/v1/threads/${run.thread_id}/runs/${run.id}/submit_tool_outputs`, {
+      await api.post(`/threads/${run.thread_id}/runs/${run.id}/submit_tool_outputs`, {
         tool_outputs: [
           {
             tool_call_id: 'call_dispo_001',

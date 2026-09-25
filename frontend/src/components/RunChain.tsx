@@ -54,7 +54,7 @@ export function RunChain({
     setSubmitting(true);
     setStatus('in_progress');
     try {
-      await api.post(`/api/v1/threads/${threadId}/runs/${runId}/submit_tool_outputs`, {
+      await api.post(`/threads/${threadId}/runs/${runId}/submit_tool_outputs`, {
         tool_outputs: [
           {
             tool_call_id: 'call_dispo_001',

@@ -6,9 +6,14 @@ from app.routers import files, runs, stream, threads, tools
 
 app = FastAPI(title="UTP Assistant")
 
+_origins = ["http://localhost:5173"]
+if settings.FRONTEND_URL:
+    _origins.append(settings.FRONTEND_URL.rstrip("/"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
